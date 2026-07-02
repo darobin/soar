@@ -1,7 +1,7 @@
 
 import { LitElement, html, css, nothing } from 'lit';
 import { SignalWatcher } from '@lit-labs/signals';
-import { setTileName, activeTab } from '../state.js';
+import './model-card.js';
 
 class Sidebar extends SignalWatcher (LitElement) {
   static styles = css`
@@ -11,7 +11,7 @@ class Sidebar extends SignalWatcher (LitElement) {
     .sidebar {
       margin: var(--sm-spacing-small);
       padding: var(--sm-spacing-small);
-      border: var(--sm-panel-border-width) solid var(--sm-color-accent-200);
+      /*border: var(--sm-panel-border-width) solid var(--sm-color-accent-200);*/
       border-radius: var(--sm-border-radius-x-small);
       flex-grow: 1;
     }
@@ -31,7 +31,7 @@ class Sidebar extends SignalWatcher (LitElement) {
     const { models } = appStore.get();
     let modelsContent = nothing;
     if (models?.length) {
-      modelsContent = html``;
+      modelsContent = models.map(m => html`<tnt-model-card .model=${m}></tnt-model-card>`);
     }
     else {
       modelsContent = html`<div class="empty">No models saved yet.</div>`;

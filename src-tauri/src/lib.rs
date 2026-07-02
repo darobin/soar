@@ -214,12 +214,12 @@ fn create_tile_from_model(id: String, app: AppHandle) -> Result<(), String> {
     if !model_path.exists() {
         return Err(format!("no model with id {id}"));
     }
-    let default_name = format!("{}.tile", safe_model_stem(&id));
+    let default_name = "document.tile";
     let app_for_cb = app.clone();
     app.dialog()
         .file()
         .add_filter("Tile Documents", &["tile"])
-        .set_file_name(&default_name)
+        .set_file_name(default_name)
         .save_file(move |maybe_path| {
             let Some(file_path) = maybe_path else { return };
             let Ok(mut dest) = file_path.into_path() else { return };

@@ -520,6 +520,14 @@ pub fn write_model_tile(source: &TileContent, dest: &Path) -> Result<()> {
         .as_ref()
         .ok_or_else(|| anyhow!("tile has no `model` field"))?;
 
+    // Icons: prefer the model's own, but fall back to the tile's top-level icons
+    // so the template keeps an icon when the model doesn't repeat one.
+    let icons = if model.icons.is_empty() {
+        source.masl.icons.clone()
+    } else {
+        model.icons.clone()
+    };
+
     // Build the stripped MASL with model metadata hoisted to the top level.
     let mut masl = source.masl.clone();
     masl.name = model.name.clone();
@@ -527,7 +535,11 @@ pub fn write_model_tile(source: &TileContent, dest: &Path) -> Result<()> {
     masl.short_name = model.short_name.clone();
     masl.theme_color = model.theme_color.clone();
     masl.background_color = model.background_color.clone();
-    masl.icons = model.icons.clone();
+    masl.icons = icons.clone();
+    // Retain the model field, populating its icons too.
+    if let Some(m) = masl.model.as_mut() {
+        m.icons = icons;
+    }
     masl.resources.retain(|path, _| !is_storage_path(path));
 
     // Blocks to keep: those referenced by surviving resources, plus any roots.
@@ -837,6 +849,10 @@ mod tests {
         let mut tile = parse_tile(&work).unwrap();
         assert!(tile.masl.model.is_some(), "sample must carry a model field");
         let model_name = tile.masl.model.as_ref().unwrap().name.clone();
+        // The sample's icons live at the top level; its model has none, so the
+        // model tile must fall back to them.
+        assert!(!tile.masl.icons.is_empty(), "sample must have top-level icons");
+        let expected_icons = tile.masl.icons.clone();
 
         // Add a self-storage entry so there is something to strip.
         write_tile_data(&mut tile, "text", b"hello world".to_vec()).unwrap();
@@ -859,6 +875,17 @@ mod tests {
         // Top-level metadata is taken from the model, and the model is retained.
         assert_eq!(model_tile.masl.name, model_name);
         assert!(model_tile.masl.model.is_some());
+        // Icons are populated on both the top level and the retained model,
+        // falling back to the tile's top-level icons.
+        let icon_srcs: Vec<&str> = expected_icons.iter().map(|i| i.src.as_str()).collect();
+        assert_eq!(
+            model_tile.masl.icons.iter().map(|i| i.src.as_str()).collect::<Vec<_>>(),
+            icon_srcs
+        );
+        assert_eq!(
+            model_tile.masl.model.as_ref().unwrap().icons.iter().map(|i| i.src.as_str()).collect::<Vec<_>>(),
+            icon_srcs
+        );
 
         std::fs::remove_dir_all(&tmp).ok();
     }

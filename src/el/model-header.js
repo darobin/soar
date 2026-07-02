@@ -1,9 +1,9 @@
 
 import { LitElement, html, css, nothing } from 'lit';
 import { SignalWatcher } from '@lit-labs/signals';
-import '@supramundane/ui/input';
 import "@supramundane/ui/button";
 import "@supramundane/ui/icon";
+import '@supramundane/ui/input';
 import { floppy } from '@supramundane/ui/icons';
 import { setTileName, activeTab, addModel, appStore } from '../state.js';
 
@@ -38,6 +38,9 @@ class ModelHeader extends SignalWatcher (LitElement) {
     }
     .actions {
       align-content: center;
+    }
+    tnt-model-header {
+      margin-bottom: var(--sm-spacing-small);
     }
   `;
 
